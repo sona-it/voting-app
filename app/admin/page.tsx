@@ -45,6 +45,7 @@ interface Poll {
   description: string
   targetYear: string
   targetSection: string
+  targetDepartment?: string
   candidates: string[]
   isActive: boolean
   votes: any[]
@@ -80,12 +81,14 @@ export default function AdminDashboard() {
   }, [viewMode, filters])
 
   const fetchVoters = async () => {
+  setVoters([]);
+  setVoterGroups([]);
     try {
       const params = new URLSearchParams()
       if (viewMode !== 'individual') params.append('groupBy', viewMode)
       if (filters.year && filters.year !== 'all') params.append('year', filters.year)
       if (filters.section && filters.section !== 'all') params.append('section', filters.section)
-      if (filters.department) params.append('department', filters.department)
+  if (filters.department && filters.department !== 'all') params.append('department', filters.department)
 
       const response = await fetch(`/api/admin/voters?${params}`, {
         headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
@@ -396,7 +399,7 @@ export default function AdminDashboard() {
                       className="mt-1"
                     />
                     <p className="text-sm text-gray-500 mt-1">
-                      Expected columns: reg_no, name, email, year, section, dept
+                      Expected columns: reg_no, name, email, year, section, department
                     </p>
                   </div>
                 </div>
@@ -411,7 +414,17 @@ export default function AdminDashboard() {
                     <CardDescription>View and manage voters by groups or individually</CardDescription>
                   </div>
                   <div className="flex gap-2">
-                    <Select value={viewMode} onValueChange={(value: any) => setViewMode(value)}>
+                    <Select
+                      value={viewMode}
+                      onValueChange={(value: any) => {
+                        setViewMode(value);
+                        if (value === 'individual') {
+                          setVoterGroups([]);
+                        } else {
+                          setVoters([]);
+                        }
+                      }}
+                    >
                       <SelectTrigger className="w-48">
                         <SelectValue />
                       </SelectTrigger>
@@ -421,6 +434,40 @@ export default function AdminDashboard() {
                         <SelectItem value="individual">Individual View</SelectItem>
                       </SelectContent>
                     </Select>
+                    {/* Voter CRUD Buttons */}
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <Button size="sm" variant="outline">Add Voter</Button>
+                      </DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle>Add New Voter</DialogTitle>
+                        </DialogHeader>
+                        <AddVoterForm onSuccess={fetchVoters} />
+                      </DialogContent>
+                    </Dialog>
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <Button size="sm" variant="outline">Delete Voter</Button>
+                      </DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle>Delete Voter</DialogTitle>
+                        </DialogHeader>
+                        <DeleteVoterForm onSuccess={fetchVoters} />
+                      </DialogContent>
+                    </Dialog>
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <Button size="sm" variant="outline">Update Voter</Button>
+                      </DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle>Update Voter</DialogTitle>
+                        </DialogHeader>
+                        <UpdateVoterForm onSuccess={fetchVoters} />
+                      </DialogContent>
+                    </Dialog>
                   </div>
                 </div>
               </CardHeader>
@@ -456,12 +503,16 @@ export default function AdminDashboard() {
                         <SelectItem value="D">Section D</SelectItem>
                       </SelectContent>
                     </Select>
-                    <Input
-                      placeholder="Department"
-                      value={filters.department}
-                      onChange={(e) => setFilters({...filters, department: e.target.value})}
-                      className="w-32"
-                    />
+                    <Select value={filters.department || 'all'} onValueChange={(value) => setFilters({...filters, department: value})}>
+                      <SelectTrigger className="w-32">
+                        <SelectValue placeholder="Department" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Branches</SelectItem>
+                        <SelectItem value="ADS">ADS</SelectItem>
+                        <SelectItem value="IT">IT</SelectItem>
+                      </SelectContent>
+                    </Select>
                     <Button variant="outline" onClick={() => setFilters({ year: 'all', section: 'all', department: '' })}>
                       Clear
                     </Button>
@@ -612,16 +663,21 @@ export default function AdminDashboard() {
                                 <TableHeader>
                                   <TableRow>
                                     <TableHead className="w-12">
-                                      <Checkbox
-                                        checked={paginationData.voters.every(v => selectedVoters.includes(v._id))}
-                                        onCheckedChange={(checked) => {
-                                          if (checked) {
-                                            setSelectedVoters(prev => [...new Set([...prev, ...paginationData.voters.map(v => v._id)])])
-                                          } else {
-                                            setSelectedVoters(prev => prev.filter(id => !paginationData.voters.some(v => v._id === id)))
-                                          }
-                                        }}
-                                      />
+                                      {(() => {
+                                        const filteredVoters = filterVoters(group.voters);
+                                        return (
+                                          <Checkbox
+                                            checked={filteredVoters.length > 0 && filteredVoters.every(v => selectedVoters.includes(v._id))}
+                                            onCheckedChange={(checked) => {
+                                              if (checked) {
+                                                setSelectedVoters(prev => [...new Set([...prev, ...filteredVoters.map(v => v._id)])]);
+                                              } else {
+                                                setSelectedVoters(prev => prev.filter(id => !filteredVoters.some(v => v._id === id)));
+                                              }
+                                            }}
+                                          />
+                                        );
+                                      })()}
                                     </TableHead>
                                     <TableHead>Reg No</TableHead>
                                     <TableHead>Name</TableHead>
@@ -1010,7 +1066,7 @@ export default function AdminDashboard() {
                 <CardDescription>View voting statistics and results</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                {/* <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                   <Card>
                     <CardContent className="p-4">
                       <div className="text-2xl font-bold">{voters.length || voterGroups.reduce((sum, group) => sum + group.totalCount, 0)}</div>
@@ -1029,7 +1085,7 @@ export default function AdminDashboard() {
                       <p className="text-sm text-gray-600">Pending Votes</p>
                     </CardContent>
                   </Card>
-                </div>
+                </div> */}
 
                 {polls.map((poll) => (
                   <Card key={poll._id} className="mb-4">
@@ -1180,6 +1236,164 @@ export default function AdminDashboard() {
           </DialogContent>
         </Dialog>
       </div>
+    </div>
+  )
+}
+
+// --- Add Voter Form ---
+function AddVoterForm({ onSuccess }: { onSuccess: () => void }) {
+  const [form, setForm] = useState({ regNo: '', name: '', email: '', year: '', section: '', department: '' })
+  const [loading, setLoading] = useState(false)
+  const handleChange = (e: any) => setForm({ ...form, [e.target.name]: e.target.value })
+  const handleSubmit = async (e: any) => {
+    e.preventDefault()
+    setLoading(true)
+    try {
+      const res = await fetch('/api/admin/voters', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify(form)
+      })
+      const data = await res.json()
+      if (data.success) {
+        alert('Voter added successfully!')
+        onSuccess()
+      } else {
+        alert(data.message || 'Failed to add voter')
+      }
+    } catch {
+      alert('Failed to add voter')
+    } finally {
+      setLoading(false)
+    }
+  }
+  return (
+    <form onSubmit={handleSubmit} className="space-y-2">
+      <Input name="regNo" placeholder="Register No" value={form.regNo} onChange={handleChange} required />
+      <Input name="name" placeholder="Name" value={form.name} onChange={handleChange} required />
+      <Input name="email" placeholder="Email" value={form.email} onChange={handleChange} required />
+      <Input name="year" placeholder="Year" value={form.year} onChange={handleChange} required />
+      <Input name="section" placeholder="Section" value={form.section} onChange={handleChange} required />
+      <Input name="department" placeholder="Department" value={form.department} onChange={handleChange} required />
+      <Button type="submit" disabled={loading} className="w-full">{loading ? 'Adding...' : 'Add Voter'}</Button>
+    </form>
+  )
+}
+
+// --- Delete Voter Form ---
+function DeleteVoterForm({ onSuccess }: { onSuccess: () => void }) {
+  const [form, setForm] = useState({ regNo: '', email: '' })
+  const [loading, setLoading] = useState(false)
+  const handleChange = (e: any) => setForm({ ...form, [e.target.name]: e.target.value })
+  const handleSubmit = async (e: any) => {
+    e.preventDefault()
+    setLoading(true)
+    try {
+      const res = await fetch('/api/admin/voters', {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ regNo: form.regNo.toUpperCase(), email: form.email })
+      })
+      const data = await res.json()
+      if (data.success) {
+        alert('Voter deleted successfully!')
+        onSuccess()
+      } else {
+        alert(data.message || 'Failed to delete voter')
+      }
+    } catch {
+      alert('Failed to delete voter')
+    } finally {
+      setLoading(false)
+    }
+  }
+  return (
+    <form onSubmit={handleSubmit} className="space-y-2">
+      <Input name="regNo" placeholder="Register No" value={form.regNo} onChange={handleChange} required />
+      <Input name="email" placeholder="Email" value={form.email} onChange={handleChange} required />
+      <Button type="submit" disabled={loading} className="w-full">{loading ? 'Deleting...' : 'Delete Voter'}</Button>
+    </form>
+  )
+}
+
+// --- Update Voter Form ---
+function UpdateVoterForm({ onSuccess }: { onSuccess: () => void }) {
+  const [form, setForm] = useState({ regNo: '' })
+  const [fields, setFields] = useState<any>({})
+  const [loading, setLoading] = useState(false)
+  const [step, setStep] = useState(1)
+  const handleChange = (e: any) => setForm({ ...form, [e.target.name]: e.target.value })
+  const handleFieldChange = (e: any) => setFields({ ...fields, [e.target.name]: e.target.value })
+  const handleFind = async (e: any) => {
+    e.preventDefault()
+    setLoading(true)
+    try {
+      const resFind = await fetch(`/api/admin/voters?regNo=${form.regNo.toUpperCase()}`, {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+      })
+      const dataFind = await resFind.json()
+      const voter = dataFind.voters?.[0]
+      if (!voter) {
+        alert('Voter not found')
+        setLoading(false)
+        return
+      }
+      setFields({ ...voter, regNo: voter.regNo.toUpperCase() })
+      setStep(2)
+    } catch {
+      alert('Failed to find voter')
+    } finally {
+      setLoading(false)
+    }
+  }
+  const handleUpdate = async (e: any) => {
+    e.preventDefault()
+    setLoading(true)
+    try {
+      const updatePayload = {
+        regNo: fields.regNo.toUpperCase(),
+        email: fields.email,
+        name: fields.name ? fields.name.toUpperCase() : '',
+        year: fields.year,
+        section: fields.section ? fields.section.toUpperCase() : '',
+        department: fields.department ? fields.department.toUpperCase() : '',
+        hasVoted: fields.hasVoted
+      }
+      const res = await fetch('/api/admin/voters', {
+        method: 'PUT',
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify(updatePayload)
+      })
+      const data = await res.json()
+      if (data.success) {
+        alert('Voter updated successfully!')
+        onSuccess()
+      } else {
+        alert(data.message || 'Failed to update voter')
+      }
+    } catch {
+      alert('Failed to update voter')
+    } finally {
+      setLoading(false)
+    }
+  }
+  return (
+    <div>
+      {step === 1 ? (
+        <form onSubmit={handleFind} className="space-y-2">
+          <Input name="regNo" placeholder="Register No" value={form.regNo} onChange={handleChange} required />
+          <Button type="submit" disabled={loading} className="w-full">{loading ? 'Finding...' : 'Find Voter'}</Button>
+        </form>
+      ) : (
+        <form onSubmit={handleUpdate} className="space-y-2">
+          <Input name="name" placeholder="Name" value={fields.name || ''} onChange={handleFieldChange} />
+          <Input name="email" placeholder="Email" value={fields.email || ''} onChange={handleFieldChange} />
+          <Input name="year" placeholder="Year" value={fields.year || ''} onChange={handleFieldChange} />
+          <Input name="section" placeholder="Section" value={fields.section || ''} onChange={handleFieldChange} />
+          <Input name="department" placeholder="Department" value={fields.department || ''} onChange={handleFieldChange} />
+          <Button type="submit" disabled={loading} className="w-full">{loading ? 'Updating...' : 'Update Voter'}</Button>
+        </form>
+      )}
     </div>
   )
 }
