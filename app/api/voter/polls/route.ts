@@ -17,14 +17,28 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ success: false, message: 'Voter not found' }, { status: 404 })
     }
 
-    // Find polls for this voter's year and section
-    // Include polls that target the entire year (targetSection = 'ALL') or specific section
+    // Find polls for this voter's year, department, and section
+    // Include polls that target all departments (targetDepartment = 'ALL') or specific department
+    // and all sections (targetSection = 'ALL') or specific section
     const polls = await db.collection('polls').find({
       targetYear: voter.year,
-      $or: [
-        { targetSection: voter.section },
-        { targetSection: '' },
-        { targetSection: { $exists: false } }
+      $and: [
+        {
+          $or: [
+            { targetDepartment: voter.department },
+            { targetDepartment: 'ALL' },
+            { targetDepartment: '' },
+            { targetDepartment: { $exists: false } }
+          ]
+        },
+        {
+          $or: [
+            { targetSection: voter.section },
+            { targetSection: 'ALL' },
+            { targetSection: '' },
+            { targetSection: { $exists: false } }
+          ]
+        }
       ]
     }).toArray()
 
