@@ -17,7 +17,7 @@ interface Poll {
   hasVoted: boolean
   targetYear?: string
   targetSection?: string
-  targetDepartment?: string
+  targetbranch?: string
 }
 
 export default function VoterDashboard() {
@@ -88,14 +88,14 @@ export default function VoterDashboard() {
     window.location.href = '/'
   }
 
-  // Filter polls for voter's department, year, and section
+  // Filter polls for voter's branch, year, and section
   let filteredPolls = polls;
   if (voterInfo) {
     filteredPolls = polls.filter(poll => {
       const yearMatch = poll.targetYear === voterInfo.year;
       const sectionMatch = !poll.targetSection || poll.targetSection === 'ALL' || poll.targetSection === voterInfo.section;
-      const departmentMatch = !poll.targetDepartment || poll.targetDepartment === 'ALL' || poll.targetDepartment === voterInfo.department;
-      return yearMatch && sectionMatch && departmentMatch;
+      const branchMatch = !poll.targetbranch || poll.targetbranch === 'ALL' || poll.targetbranch === voterInfo.branch;
+      return yearMatch && sectionMatch && branchMatch;
     });
   }
 
@@ -122,7 +122,7 @@ export default function VoterDashboard() {
               <CardContent className="text-center py-12">
                 <Vote className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                 <h3 className="text-lg font-medium text-gray-900 mb-2">No Polls Available</h3>
-                <p className="text-gray-600">There are currently no active polls for your year, section, and department.</p>
+                <p className="text-gray-600">There are currently no active polls for your year, section, and branch.</p>
               </CardContent>
             </Card>
           ) : (

@@ -215,8 +215,8 @@ export default function AnalyticsPage() {
           {/* Voters by Department */}
           <Card>
             <CardHeader>
-              <CardTitle>Voters by Department</CardTitle>
-              <CardDescription>Department-wise voter distribution</CardDescription>
+              <CardTitle>Voters by Branch</CardTitle>
+              <CardDescription>Branch-wise voter distribution</CardDescription>
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={300}>

@@ -12,12 +12,12 @@ export async function PUT(request: NextRequest) {
     // Find the voter by regNo only (case-insensitive, uppercase regNo)
     const filter = { regNo: body.regNo.toUpperCase() }
     const updateFields: any = {}
-    if (body.name) updateFields.name = body.name.toUpperCase()
-    if (body.year) updateFields.year = body.year
-    if (body.section) updateFields.section = body.section.toUpperCase()
-    if (body.department) updateFields.department = body.department.toUpperCase()
-    if (body.hasVoted !== undefined) updateFields.hasVoted = body.hasVoted
-    if (body.email) updateFields.email = body.email
+  if (body.name) updateFields.name = body.name.toUpperCase()
+  if (body.year) updateFields.year = body.year
+  if (body.section) updateFields.section = body.section.toUpperCase()
+  if (body.branch) updateFields.branch = body.branch.toUpperCase()
+  if (body.hasVoted !== undefined) updateFields.hasVoted = body.hasVoted
+  if (body.email) updateFields.email = body.email
     // Regenerate password on update
     const newPassword = generateRandomPassword(10)
     updateFields.password = newPassword
@@ -79,7 +79,7 @@ export async function POST(request: NextRequest) {
       email: body.email,
       year: body.year,
       section: body.section?.toUpperCase() || '',
-      department: body.department?.toUpperCase() || '',
+      branch: body.branch?.toUpperCase() || '',
       password,
       hasVoted: false
     }
@@ -110,7 +110,7 @@ export async function GET(request: NextRequest) {
     const groupBy = searchParams.get('groupBy') // 'year-section' or 'year' or 'none'
     const year = searchParams.get('year')
     const section = searchParams.get('section')
-    const department = searchParams.get('department')
+  const branch = searchParams.get('branch')
 
     const db = await connectDB()
     
@@ -122,7 +122,7 @@ export async function GET(request: NextRequest) {
   if (email) filter.email = email
   if (year) filter.year = year
   if (section) filter.section = section
-  if (department) filter.department = department
+  if (branch) filter.branch = branch
 
   const voters = await db.collection('voters').find(filter).sort({ year: 1, section: 1, name: 1 }).toArray()
     
@@ -130,12 +130,12 @@ export async function GET(request: NextRequest) {
       // Group by year and section
       const groups: any = {}
       voters.forEach(voter => {
-        const key = `${voter.year}-${voter.section}-${voter.department}`
+        const key = `${voter.year}-${voter.section}-${voter.branch}`
         if (!groups[key]) {
           groups[key] = {
             year: voter.year,
             section: voter.section,
-            department: voter.department,
+            branch: voter.branch,
             voters: [],
             totalCount: 0,
             votedCount: 0

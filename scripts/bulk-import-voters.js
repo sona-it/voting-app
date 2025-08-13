@@ -62,7 +62,7 @@ async function importVotersFromExcel(filePath) {
       const email = row.email || row.Email || row.email_id || row['Email ID'];
       const year = row.year || row.Year || row.academic_year || row['Academic Year'];
       const section = row.section || row.Section || row.sec || row.Sec;
-      const dept = row.dept || row.department || row.Department || row.branch || row.Branch;
+  const branch = row.dept || row.department || row.Department || row.branch || row.Branch;
       
       // Validate required fields
       if (!regNo) {
@@ -90,8 +90,8 @@ async function importVotersFromExcel(filePath) {
         continue;
       }
       
-      if (!dept) {
-        errors.push(`Row ${rowNum}: Missing department`);
+      if (!branch) {
+        errors.push(`Row ${rowNum}: Missing branch`);
         continue;
       }
       
@@ -131,7 +131,7 @@ async function importVotersFromExcel(filePath) {
         email: email.toLowerCase().trim(),
         year: year.toString(),
         section: section.toUpperCase().trim(),
-        department: dept.trim(),
+        branch: branch.trim(),
         password: generatePassword(),
         hasVoted: false,
         createdAt: new Date()
@@ -179,7 +179,7 @@ async function importVotersFromExcel(filePath) {
     voters.forEach(voter => {
       const key = `${voter.year}-${voter.section}`;
       if (!groups[key]) {
-        groups[key] = { year: voter.year, section: voter.section, count: 0, department: voter.department };
+        groups[key] = { year: voter.year, section: voter.section, count: 0, branch: voter.branch };
       }
       groups[key].count++;
     });
@@ -188,7 +188,7 @@ async function importVotersFromExcel(filePath) {
     console.log(`Total inserted: ${result.insertedCount} voters`);
     console.log('\n📊 Summary by Year and Section:');
     Object.values(groups).forEach(group => {
-      console.log(`- Year ${group.year}, Section ${group.section} (${group.department}): ${group.count} voters`);
+      console.log(`- Year ${group.year}, Section ${group.section} (${group.branch}): ${group.count} voters`);
     });
     
     // Display sample credentials
@@ -220,7 +220,7 @@ if (!filePath) {
   console.log('- email (Email Address)');
   console.log('- year (Academic Year: 1, 2, 3, or 4)');
   console.log('- section (Section: A, B, C, D, E, or F)');
-  console.log('- dept (Department)');
+  console.log('- branch (branch)');
   process.exit(1);
 }
 

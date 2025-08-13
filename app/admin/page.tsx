@@ -24,7 +24,7 @@ interface Voter {
   email: string
   year: string
   section: string
-  department: string
+  branch: string
   password: string
   hasVoted: boolean
 }
@@ -32,7 +32,7 @@ interface Voter {
 interface VoterGroup {
   year: string
   section?: string
-  department: string
+  branch: string
   voters: Voter[]
   totalCount: number
   votedCount: number
@@ -45,7 +45,7 @@ interface Poll {
   description: string
   targetYear: string
   targetSection: string
-  targetDepartment?: string
+  targetbranch?: string
   candidates: string[]
   isActive: boolean
   votes: any[]
@@ -60,7 +60,7 @@ export default function AdminDashboard() {
   const [polls, setPolls] = useState<Poll[]>([])
   const [showPasswords, setShowPasswords] = useState<{[key: string]: boolean}>({})
   const [viewMode, setViewMode] = useState<'individual' | 'year-section' | 'year'>('year-section')
-  const [filters, setFilters] = useState({ year: 'all', section: 'all', department: '' })
+  const [filters, setFilters] = useState({ year: 'all', section: 'all', branch: '' })
   const [selectedVoters, setSelectedVoters] = useState<string[]>([])
   const [bulkActionLoading, setBulkActionLoading] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
@@ -71,7 +71,7 @@ export default function AdminDashboard() {
     description: '',
     targetYear: '',
     targetSection: '',
-    targetDepartment: '',
+    targetbranch: '',
     candidates: ['']
   })
 
@@ -88,7 +88,7 @@ export default function AdminDashboard() {
       if (viewMode !== 'individual') params.append('groupBy', viewMode)
       if (filters.year && filters.year !== 'all') params.append('year', filters.year)
       if (filters.section && filters.section !== 'all') params.append('section', filters.section)
-  if (filters.department && filters.department !== 'all') params.append('department', filters.department)
+  if (filters.branch && filters.branch !== 'all') params.append('branch', filters.branch)
 
       const response = await fetch(`/api/admin/voters?${params}`, {
         headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
@@ -122,7 +122,7 @@ export default function AdminDashboard() {
   }
 
   const handleBulkAction = async (action: string) => {
-    if (selectedVoters.length === 0 && !filters.year && !filters.section && !filters.department) {
+    if (selectedVoters.length === 0 && !filters.year && !filters.section && !filters.branch) {
       alert('Please select voters or apply filters')
       return
     }
@@ -245,8 +245,8 @@ export default function AdminDashboard() {
 
   const createPoll = async () => {
     // Validate required fields
-    if (!newPoll.title.trim() || !newPoll.description.trim() || !newPoll.targetYear || !newPoll.targetSection || !newPoll.targetDepartment || newPoll.candidates.some(c => !c.trim())) {
-      alert('Please fill all poll fields including department, year, section, and candidates.')
+    if (!newPoll.title.trim() || !newPoll.description.trim() || !newPoll.targetYear || !newPoll.targetSection || !newPoll.targetbranch || newPoll.candidates.some(c => !c.trim())) {
+      alert('Please fill all poll fields including branch, year, section, and candidates.')
       return
     }
     try {
@@ -261,7 +261,7 @@ export default function AdminDashboard() {
       const data = await response.json()
       if (data.success) {
         alert(`Poll created successfully! Eligible voters: ${data.eligibleVotersCount}`)
-        setNewPoll({ title: '', description: '', targetYear: '', targetSection: '', targetDepartment: '', candidates: [''] })
+        setNewPoll({ title: '', description: '', targetYear: '', targetSection: '', targetbranch: '', candidates: [''] })
         fetchPolls()
       } else {
         alert(data.message || 'Failed to create poll')
@@ -399,7 +399,7 @@ export default function AdminDashboard() {
                       className="mt-1"
                     />
                     <p className="text-sm text-gray-500 mt-1">
-                      Expected columns: reg_no, name, email, year, section, department
+                      Expected columns: reg_no, name, email, year, section, branch
                     </p>
                   </div>
                 </div>
@@ -417,10 +417,14 @@ export default function AdminDashboard() {
                     <Select
                       value={viewMode}
                       onValueChange={(value: any) => {
-                        setViewMode(value);
                         if (value === 'individual') {
-                          setVoterGroups([]);
+                          setFilters({ year: 'all', section: 'all', branch: '' });
+                          setTimeout(() => {
+                            setViewMode(value);
+                            setVoterGroups([]);
+                          }, 0);
                         } else {
+                          setViewMode(value);
                           setVoters([]);
                         }
                       }}
@@ -503,9 +507,9 @@ export default function AdminDashboard() {
                         <SelectItem value="D">Section D</SelectItem>
                       </SelectContent>
                     </Select>
-                    <Select value={filters.department || 'all'} onValueChange={(value) => setFilters({...filters, department: value})}>
+                    <Select value={filters.branch || 'all'} onValueChange={(value) => setFilters({...filters, branch: value})}>
                       <SelectTrigger className="w-32">
-                        <SelectValue placeholder="Department" />
+                        <SelectValue placeholder="branch" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="all">All Branches</SelectItem>
@@ -513,7 +517,7 @@ export default function AdminDashboard() {
                         <SelectItem value="IT">IT</SelectItem>
                       </SelectContent>
                     </Select>
-                    <Button variant="outline" onClick={() => setFilters({ year: 'all', section: 'all', department: '' })}>
+                    <Button variant="outline" onClick={() => setFilters({ year: 'all', section: 'all', branch: '' })}>
                       Clear
                     </Button>
                   </div>
@@ -531,7 +535,7 @@ export default function AdminDashboard() {
                 </div>
 
                 {/* Bulk Actions */}
-                {(selectedVoters.length > 0 || (filters.year !== 'all' || filters.section !== 'all' || filters.department)) && (
+                {(selectedVoters.length > 0 || (filters.year !== 'all' || filters.section !== 'all' || filters.branch)) && (
                   <div className="flex gap-2 mb-4 p-4 bg-blue-50 rounded-lg">
                     <div className="flex items-center gap-2 flex-1">
                       {selectedVoters.length > 0 ? (
@@ -617,7 +621,7 @@ export default function AdminDashboard() {
                                   Year {group.year} {group.section ? `- Section ${group.section}` : '(All Sections)'}
                                 </CardTitle>
                                 <CardDescription>
-                                  {group.department} | {group.totalCount} voters | {group.votedCount} voted
+                                  {group.branch} | {group.totalCount} voters | {group.votedCount} voted
                                   {group.sections && ` | Sections: ${group.sections.join(', ')}`}
                                   {searchTerm && paginationData.totalFiltered !== paginationData.totalOriginal && (
                                     <span className="text-blue-600"> | {paginationData.totalFiltered} matching search</span>
@@ -785,7 +789,7 @@ export default function AdminDashboard() {
                           <TableHead>Email</TableHead>
                           <TableHead>Year</TableHead>
                           <TableHead>Section</TableHead>
-                          <TableHead>Department</TableHead>
+                          <TableHead>Branch</TableHead>
                           <TableHead>Password</TableHead>
                           <TableHead>Status</TableHead>
                           <TableHead>Actions</TableHead>
@@ -805,7 +809,7 @@ export default function AdminDashboard() {
                             <TableCell>{voter.email}</TableCell>
                             <TableCell>{voter.year}</TableCell>
                             <TableCell>{voter.section}</TableCell>
-                            <TableCell>{voter.department}</TableCell>
+                            <TableCell>{voter.branch}</TableCell>
                             <TableCell>
                               <div className="flex items-center gap-2">
                                 <span className="font-mono text-sm">
@@ -918,15 +922,15 @@ export default function AdminDashboard() {
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="target-department">Target Department</Label>
-                    <Select value={newPoll.targetDepartment} onValueChange={(value) => setNewPoll({...newPoll, targetDepartment: value})}>
+                    <Label htmlFor="target-branch">Target Branch</Label>
+                    <Select value={newPoll.targetbranch} onValueChange={(value) => setNewPoll({...newPoll, targetbranch: value})}>
                       <SelectTrigger>
-                        <SelectValue placeholder="Select department" />
+                        <SelectValue placeholder="Select branch" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="IT">IT</SelectItem>
                         <SelectItem value="ADS">ADS</SelectItem>
-                        <SelectItem value="ALL">All Departments</SelectItem>
+                        <SelectItem value="ALL">All branchs</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -992,7 +996,7 @@ export default function AdminDashboard() {
                             <CardDescription>{poll.description}</CardDescription>
                             <p className="text-sm text-gray-600 mt-2">
                               Target: Year {poll.targetYear} {poll.targetSection === 'ALL' ? '(All Sections)' : `Section ${poll.targetSection}`}
-                              {poll.targetDepartment && poll.targetDepartment !== 'ALL' ? `, Department ${poll.targetDepartment}` : poll.targetDepartment === 'ALL' ? ', All Departments' : ''}
+                              {poll.targetbranch && poll.targetbranch !== 'ALL' ? `, branch ${poll.targetbranch}` : poll.targetbranch === 'ALL' ? ', All branchs' : ''}
                               <br />
                               Eligible Voters: {poll.eligibleVotersCount} | Votes Cast: {poll.votes?.length || 0}
                             </p>
@@ -1242,7 +1246,7 @@ export default function AdminDashboard() {
 
 // --- Add Voter Form ---
 function AddVoterForm({ onSuccess }: { onSuccess: () => void }) {
-  const [form, setForm] = useState({ regNo: '', name: '', email: '', year: '', section: '', department: '' })
+  const [form, setForm] = useState({ regNo: '', name: '', email: '', year: '', section: '', branch: '' })
   const [loading, setLoading] = useState(false)
   const handleChange = (e: any) => setForm({ ...form, [e.target.name]: e.target.value })
   const handleSubmit = async (e: any) => {
@@ -1272,9 +1276,31 @@ function AddVoterForm({ onSuccess }: { onSuccess: () => void }) {
       <Input name="regNo" placeholder="Register No" value={form.regNo} onChange={handleChange} required />
       <Input name="name" placeholder="Name" value={form.name} onChange={handleChange} required />
       <Input name="email" placeholder="Email" value={form.email} onChange={handleChange} required />
-      <Input name="year" placeholder="Year" value={form.year} onChange={handleChange} required />
-      <Input name="section" placeholder="Section" value={form.section} onChange={handleChange} required />
-      <Input name="department" placeholder="Department" value={form.department} onChange={handleChange} required />
+      <Select name="year" value={form.year} onValueChange={value => setForm({ ...form, year: value })}>
+        <SelectTrigger className="w-full"><SelectValue placeholder="Year" /></SelectTrigger>
+        <SelectContent>
+          <SelectItem value="1">1</SelectItem>
+          <SelectItem value="2">2</SelectItem>
+          <SelectItem value="3">3</SelectItem>
+          <SelectItem value="4">4</SelectItem>
+        </SelectContent>
+      </Select>
+      <Select name="section" value={form.section} onValueChange={value => setForm({ ...form, section: value })}>
+        <SelectTrigger className="w-full"><SelectValue placeholder="Section" /></SelectTrigger>
+        <SelectContent>
+          <SelectItem value="A">A</SelectItem>
+          <SelectItem value="B">B</SelectItem>
+          <SelectItem value="C">C</SelectItem>
+          <SelectItem value="D">D</SelectItem>
+        </SelectContent>
+      </Select>
+      <Select name="branch" value={form.branch} onValueChange={value => setForm({ ...form, branch: value })}>
+        <SelectTrigger className="w-full"><SelectValue placeholder="Branch" /></SelectTrigger>
+        <SelectContent>
+          <SelectItem value="ADS">ADS</SelectItem>
+          <SelectItem value="IT">IT</SelectItem>
+        </SelectContent>
+      </Select>
       <Button type="submit" disabled={loading} className="w-full">{loading ? 'Adding...' : 'Add Voter'}</Button>
     </form>
   )
@@ -1356,7 +1382,7 @@ function UpdateVoterForm({ onSuccess }: { onSuccess: () => void }) {
         name: fields.name ? fields.name.toUpperCase() : '',
         year: fields.year,
         section: fields.section ? fields.section.toUpperCase() : '',
-        department: fields.department ? fields.department.toUpperCase() : '',
+        branch: fields.branch ? fields.branch.toUpperCase() : '',
         hasVoted: fields.hasVoted
       }
       const res = await fetch('/api/admin/voters', {
@@ -1388,9 +1414,31 @@ function UpdateVoterForm({ onSuccess }: { onSuccess: () => void }) {
         <form onSubmit={handleUpdate} className="space-y-2">
           <Input name="name" placeholder="Name" value={fields.name || ''} onChange={handleFieldChange} />
           <Input name="email" placeholder="Email" value={fields.email || ''} onChange={handleFieldChange} />
-          <Input name="year" placeholder="Year" value={fields.year || ''} onChange={handleFieldChange} />
-          <Input name="section" placeholder="Section" value={fields.section || ''} onChange={handleFieldChange} />
-          <Input name="department" placeholder="Department" value={fields.department || ''} onChange={handleFieldChange} />
+          <Select name="year" value={fields.year || ''} onValueChange={value => setFields({ ...fields, year: value })}>
+            <SelectTrigger className="w-full"><SelectValue placeholder="Year" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="1">1</SelectItem>
+              <SelectItem value="2">2</SelectItem>
+              <SelectItem value="3">3</SelectItem>
+              <SelectItem value="4">4</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select name="section" value={fields.section || ''} onValueChange={value => setFields({ ...fields, section: value })}>
+            <SelectTrigger className="w-full"><SelectValue placeholder="Section" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="A">A</SelectItem>
+              <SelectItem value="B">B</SelectItem>
+              <SelectItem value="C">C</SelectItem>
+              <SelectItem value="D">D</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select name="branch" value={fields.branch || ''} onValueChange={value => setFields({ ...fields, branch: value })}>
+            <SelectTrigger className="w-full"><SelectValue placeholder="Branch" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="ADS">ADS</SelectItem>
+              <SelectItem value="IT">IT</SelectItem>
+            </SelectContent>
+          </Select>
           <Button type="submit" disabled={loading} className="w-full">{loading ? 'Updating...' : 'Update Voter'}</Button>
         </form>
       )}

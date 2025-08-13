@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
       const email = row.email || row.Email || row.email_id || row['Email ID'] || row['Student Sonatech Mail ID']
       const year = row.year || row.Year || row.academic_year || row['Academic Year'] 
       const section = row.section || row.Section || row.sec || row.Sec
-      const dept = row.dept || row.department || row.Department || row.branch || row.Branch
+      const dept = row.dept || row.branch || row.branch || row.branch || row.Branch
 
       // Validate required fields
       if (!regNo) {
@@ -84,7 +84,7 @@ export async function POST(request: NextRequest) {
         continue
       }
       if (!dept) {
-        errors.push(`Row ${rowNum}: Missing department`)
+        errors.push(`Row ${rowNum}: Missing branch`)
         continue
       }
 
@@ -105,7 +105,7 @@ export async function POST(request: NextRequest) {
           email: email.toLowerCase().trim(),
           year: year.toString(),
           section: section.toUpperCase().trim(),
-          department: dept.trim(),
+          branch: dept.trim(),
           password: generatePassword(),
           hasVoted: false,
           createdAt: new Date(),
@@ -209,7 +209,7 @@ export async function POST(request: NextRequest) {
 //       const email = row.email || row.Email || row.email_id || row['Email ID'] || row['Student Sonatech Mail ID']
 //       const year = row.year || row.Year || row.academic_year || row['Academic Year'] 
 //       const section = row.section || row.Section || row.sec || row.Sec
-//       const dept = row.dept || row.department || row.Department || row.branch || row.Branch
+//       const dept = row.dept || row.branch || row.branch || row.branch || row.Branch
 
 //       // Validate required fields
 //       if (!regNo) {
@@ -233,7 +233,7 @@ export async function POST(request: NextRequest) {
 //         continue
 //       }
 //       if (!dept) {
-//         errors.push(`Row ${rowNum}: Missing department`)
+//         errors.push(`Row ${rowNum}: Missing branch`)
 //         continue
 //       }
 
@@ -254,7 +254,7 @@ export async function POST(request: NextRequest) {
 //         email: email.toLowerCase().trim(),
 //         year: year.toString(),
 //         section: section.toUpperCase().trim(),
-//         department: dept.trim(),
+//         branch: dept.trim(),
 //         password: generatePassword(),
 //         hasVoted: false,
 //         createdAt: new Date()

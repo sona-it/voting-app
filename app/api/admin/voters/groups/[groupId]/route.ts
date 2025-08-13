@@ -12,22 +12,22 @@ export async function DELETE(request: NextRequest, { params }: { params: { group
     const { groupId } = params
     const db = await connectDB()
     
-    // Parse groupId (format: "year-section-department", "year-section", "year-department", or "year")
+    // Parse groupId (format: "year-section-branch", "year-section", "year-branch", or "year")
     let filter: any = {}
     const parts = groupId.split('-')
     if (parts.length === 3) {
-      // Year-Section-Department (e.g., "3-A-ADS")
-      const [year, section, department] = parts
-      filter = { year, section, department }
+      // Year-Section-branch (e.g., "3-A-ADS")
+      const [year, section, branch] = parts
+      filter = { year, section, branch }
     } else if (parts.length === 2) {
-      // Could be Year-Section or Year-Department
+      // Could be Year-Section or Year-branch
       const [first, second] = parts
       if (["A","B","C","D","E","F"].includes(second)) {
         // Year-Section
         filter = { year: first, section: second }
       } else {
-        // Year-Department
-        filter = { year: first, department: second }
+        // Year-branch
+        filter = { year: first, branch: second }
       }
     } else {
       // Year only

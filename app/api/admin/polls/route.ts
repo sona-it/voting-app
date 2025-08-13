@@ -17,13 +17,13 @@ export async function GET(request: NextRequest) {
       const votes = await db.collection('votes').find({ pollId: poll._id }).toArray()
       poll.votes = votes
 
-      // Get eligible voter count (include department)
+      // Get eligible voter count (include branch)
       let eligibleVotersFilter: any = { year: poll.targetYear };
       if (poll.targetSection && poll.targetSection !== 'ALL') {
         eligibleVotersFilter.section = poll.targetSection;
       }
-      if (poll.targetDepartment && poll.targetDepartment !== 'ALL') {
-        eligibleVotersFilter.department = poll.targetDepartment;
+      if (poll.targetbranch && poll.targetbranch !== 'ALL') {
+        eligibleVotersFilter.branch = poll.targetbranch;
       }
       const eligibleVotersCount = await db.collection('voters').countDocuments(eligibleVotersFilter);
       poll.eligibleVotersCount = eligibleVotersCount;
@@ -47,7 +47,7 @@ export async function POST(request: NextRequest) {
     const db = await connectDB()
     
     // Validate poll data
-    if (!pollData.title || !pollData.targetYear || !pollData.candidates || pollData.candidates.length === 0 || !pollData.targetDepartment) {
+    if (!pollData.title || !pollData.targetYear || !pollData.candidates || pollData.candidates.length === 0 || !pollData.targetbranch) {
       return NextResponse.json({ success: false, message: 'Missing required fields' })
     }
 
@@ -56,15 +56,15 @@ export async function POST(request: NextRequest) {
     if (pollData.targetSection && pollData.targetSection !== 'ALL') {
       eligibleVotersFilter.section = pollData.targetSection
     }
-    if (pollData.targetDepartment && pollData.targetDepartment !== 'ALL') {
-      eligibleVotersFilter.department = pollData.targetDepartment
+    if (pollData.targetbranch && pollData.targetbranch !== 'ALL') {
+      eligibleVotersFilter.branch = pollData.targetbranch
     }
 
     const eligibleVotersCount = await db.collection('voters').countDocuments(eligibleVotersFilter)
     if (eligibleVotersCount === 0) {
       return NextResponse.json({ 
         success: false, 
-        message: `No eligible voters found for Year ${pollData.targetYear}${pollData.targetSection && pollData.targetSection !== 'ALL' ? `, Section ${pollData.targetSection}` : ''}${pollData.targetDepartment && pollData.targetDepartment !== 'ALL' ? `, Department ${pollData.targetDepartment}` : ''}`
+        message: `No eligible voters found for Year ${pollData.targetYear}${pollData.targetSection && pollData.targetSection !== 'ALL' ? `, Section ${pollData.targetSection}` : ''}${pollData.targetbranch && pollData.targetbranch !== 'ALL' ? `, branch ${pollData.targetbranch}` : ''}`
       })
     }
 

@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
           'Email': voter.email,
           'Year': voter.year,
           'Section': voter.section,
-          'Department': voter.department,
+          'branch': voter.branch,
           'Password': voter.password,
           'Has Voted': voter.hasVoted ? 'Yes' : 'No',
           'Created At': voter.createdAt?.toISOString()
@@ -96,7 +96,7 @@ export async function GET(request: NextRequest) {
               'Voter Name': '$voter.name',
               'Voter Year': '$voter.year',
               'Voter Section': '$voter.section',
-              'Voter Department': '$voter.department',
+              'Voter branch': '$voter.branch',
               'Candidate Voted': '$candidate',
               'Vote Timestamp': '$timestamp'
             }
