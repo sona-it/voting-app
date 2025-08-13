@@ -55,7 +55,7 @@ Department: ${voter.department}
 
 Please use these credentials to log in to the voting system and cast your vote.
 
-Login URL: ${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}
+Login URL: ${process.env.NEXT_PUBLIC_APP_URL}
 
 Best regards,
 Election Committee
