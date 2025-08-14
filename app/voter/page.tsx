@@ -107,7 +107,7 @@ export default function VoterDashboard() {
             <h1 className="text-3xl font-bold text-gray-900">Voter Dashboard</h1>
             {voterInfo && (
               <p className="text-gray-600">
-                Welcome, {voterInfo.name} ({voterInfo.year} Year, Section {voterInfo.section})
+                Welcome, {voterInfo.name} ({voterInfo.year} Year, Section {voterInfo.section}, Branch {voterInfo.branch})
               </p>
             )}
           </div>
